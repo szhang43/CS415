@@ -1,5 +1,5 @@
 /*
- * string_parser.c
+ * command.c
  *
  *  Created on: October 07, 2024
  *      Author: Sophia Zhang 
@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "command.h"
-
-
 
 
 void listDir(){
