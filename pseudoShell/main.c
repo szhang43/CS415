@@ -25,6 +25,9 @@ int main(int argc, char *argv[]){
         lineSize = getline(&input, &storedInput, stdin);
         
         command_line cmd = str_filler(input, " ");
+        char *cmdInput = cmd.command_list[0];
+        int token = count_token(input, " ");
+
         // If getline encounters an error (returns -1), exit the loop
         if (lineSize == -1) {
             printf("Error reading input");
@@ -35,15 +38,33 @@ int main(int argc, char *argv[]){
             input[lineSize - 1] = '\0';
         }
 
+        // printf("strcmp mkdir: %d \n", strcmp(input, cmd.command_list[0]));
+        // printf("input: %s\n", input);
+
         if(strcmp(input, "ls") == 0){
             listDir();
-        } else if(strcmp(input, "pwd") == 0){
+        } 
+        else if(strcmp(input, "pwd") == 0){
             showCurrentDir();
-        } else if (strcmp(input, cmd.command_list[0]) == 0){
-            makeDir(cmd.command_list[1]);
-
-        }else {
-            printf("Command not found!\n");
+        } 
+        else if(strcmp(cmdInput, "mkdir") == 0){
+            for(int i = 1; i < token - 1; i++){
+                makeDir(cmd.command_list[i]);
+            }
+        }
+        else if(strcmp(cmdInput, "cd") == 0){
+            printf("%s\n", cmd.command_list[1]);
+            if(cmd.command_list[1] == NULL){
+               continue;
+               // TODO: cd back to home
+            }
+            changeDir(cmd.command_list[1]);
+        }
+        else if(strcmp(cmdInput, "rm")){
+            deleteFile(cmd.command_list[1]);
+        }
+        else{
+            printf("Commasnd not found!\n");
         }
 
         if (strcmp(input, "exit\n") == 0) {
