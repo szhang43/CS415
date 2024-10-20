@@ -30,7 +30,9 @@ int main(int argc, char *argv[]){
         if (input[lineSize - 1] == '\n') {
             input[lineSize - 1] = '\0';
         }
-
+        if(strcmp(input, "exit") == 0){
+            break;
+        }
         for(int i = 0; wholeInput.command_list[i] != NULL; i++){
             command_line cmd = str_filler(wholeInput.command_list[i], " ");
    
@@ -105,9 +107,6 @@ int main(int argc, char *argv[]){
                 printf("Command not found!\n");
             }
 
-            if (strcmp(input, "exit") == 0) {
-                break;
-            }
         }
 
 

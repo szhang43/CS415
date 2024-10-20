@@ -37,7 +37,6 @@ void listDir(){
     }
     write(STDOUT_FILENO, "\n", 1);
     closedir(dir);   
-
 }; /*for the ls command*/
 
 void showCurrentDir(){
