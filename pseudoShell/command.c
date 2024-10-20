@@ -32,7 +32,7 @@ void listDir(){
 
     while((read_file = readdir(dir)) != NULL){
         write(STDOUT_FILENO, read_file->d_name, strlen(read_file->d_name));
-        write(STDOUT_FILENO, "   ", 3);
+        write(STDOUT_FILENO, " ", 1);
 
     }
     write(STDOUT_FILENO, "\n", 1);
@@ -93,11 +93,35 @@ void copyFile(char *sourcePath, char *destinationPath){
 }; /*for the cp command*/
 
 void moveFile(char *sourcePath, char *destinationPath){
-    
+    struct stat sourceStat, desStat; 
+    char *sourceError = "Source path does not exist!\n";
+    char *destError = "Destination path does not exist!\n";
+    char otherError[1024] = "Rename Operation Failed\n";
+
+    char * baseName = basename(sourcePath);
+    char newDestPath[1024];
+    strcpy(newDestPath, destinationPath);
+    strcat(newDestPath, "/");
+    strcat(newDestPath, baseName); 
+    destinationPath = newDestPath;
+
+    if(rename(sourcePath, destinationPath) != 0){
+        if (stat(sourcePath, &sourceStat) != 0){
+            write(STDERR_FILENO, sourceError, strlen(sourceError));
+        } else if(stat(destinationPath, &desStat) != 0){
+            write(STDERR_FILENO, destError, strlen(destError));
+        } else {
+            write(STDERR_FILENO, otherError, strlen(otherError));
+        }
+    }
+   
 }; /*for the mv command*/
 
 void deleteFile(char *filename){
-    remove(filename);
+    char *msg = "Error! File does not exist!\n";
+    if(remove(filename) != 0){
+        write(1, msg, strlen(msg));
+    };
 }; /*for the rm command*/
 
 void displayFile(char *filename){
