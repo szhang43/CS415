@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
         
         command_line cmd = str_filler(input, " ");
         char *cmdInput = cmd.command_list[0];
-        int token = count_token(input, " ");
+        int token = cmd.num_token;
 
         // If getline encounters an error (returns -1), exit the loop
         if (lineSize == -1) {
@@ -48,23 +48,35 @@ int main(int argc, char *argv[]){
             showCurrentDir();
         } 
         else if(strcmp(cmdInput, "mkdir") == 0){
-            for(int i = 1; i < token - 1; i++){
+            printf("token : %d\n", cmd.num_token);
+            for(int i = 1; i < cmd.num_token; i++){
                 makeDir(cmd.command_list[i]);
             }
         }
         else if(strcmp(cmdInput, "cd") == 0){
-            printf("%s\n", cmd.command_list[1]);
-            if(cmd.command_list[1] == NULL){
-               continue;
-               // TODO: cd back to home
+            printf("token : %d\n", cmd.num_token);
+            if(cmd.num_token == 1){
+                printf("Error: Too few arguments!");
             }
             changeDir(cmd.command_list[1]);
         }
-        else if(strcmp(cmdInput, "rm")){
+        else if(strcmp(cmdInput, "rm") == 0){
             deleteFile(cmd.command_list[1]);
         }
+        else if(strcmp(cmdInput, "cat") == 0){
+            displayFile(cmd.command_list[1]);
+        }
+        else if(strcmp(cmdInput, "cp") == 0){
+            if(cmd.num_token >= 5){
+                printf("intput: %s\n", input);
+                printf("token : %d\n", cmd.num_token);
+                printf("Too many arguments!\n");
+            } else {
+                copyFile(cmd.command_list[1], cmd.command_list[2]);
+            }
+        }
         else{
-            printf("Commasnd not found!\n");
+            printf("Command not found!\n");
         }
 
         if (strcmp(input, "exit\n") == 0) {
