@@ -16,7 +16,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <errno.h>  
 #include <libgen.h>
 
 void listDir(){
@@ -35,8 +35,8 @@ void listDir(){
         write(STDOUT_FILENO, " ", 1);
 
     }
-    write(STDOUT_FILENO, "\n", 1);
     closedir(dir);   
+    write(STDOUT_FILENO, "\n", 1);
 }; /*for the ls command*/
 
 void showCurrentDir(){

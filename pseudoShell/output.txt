@@ -1,0 +1,13 @@
+/home/sophie/CS415/pseudoShell
+.. . 
+/home/sophie/CS415/pseudoShell/test
+/home/sophie/CS415/pseudoShell/test
+.. . 
+/home/sophie/CS415/pseudoShell/test
+.. . 
+Error! File does not exist!
+.. . 
+/home/sophie/CS415/pseudoShell
+output.txt main.o input.txt .vscode Makefile main.c README.txt string_parser.o command.c .. . string_parser.h pseudo-shell string_parser.c test command.h command.o test_script.sh 
+output.txt main.o input.txt .vscode Makefile main.c README.txt string_parser.o command.c .. . string_parser.h pseudo-shell string_parser.c test command.h command.o test_script.sh 
+Command not found!

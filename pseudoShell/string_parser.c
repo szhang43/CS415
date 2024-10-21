@@ -11,7 +11,7 @@
 #include <string.h>
 #include "string_parser.h"
 
-#define _GNU_SOURCE
+#define _GUN_SOURCE
 
 int count_token (char* buf, const char* delim)
 {
@@ -26,17 +26,20 @@ int count_token (char* buf, const char* delim)
 	*	#3. return the number of token (note not number of delimeter)
 	*/
 
-	char *savePtr, *token, *str1, *ptr1; 
-	int counter = 1; 
+	char *token, *ptr1, *str1, *placeholder;
+	int counter = 1;
+
 	strtok_r(buf, "\n", &ptr1);
-	for(savePtr = str1 = strdup(buf) ;; str1 = NULL){
+
+	for(placeholder = str1 = strdup(buf);; str1 = NULL){
 		token = strtok_r(str1, delim, &ptr1);
 		if(token == NULL){
 			break;
 		}
 		counter++;
 	}
-	free(savePtr);
+
+	free(placeholder);
 	return counter;
 }
 
@@ -54,22 +57,23 @@ command_line str_filler (char* buf, const char* delim)
 	*			fill command_list array with tokens, and fill last spot with NULL.
 	*	#6. return the variable.
 	*/
-	command_line cmd; 
-	char *token, *savePtr, *str1, *ptr1; 
-	int i ;
-	cmd.num_token = count_token(buf, delim);
-	cmd.command_list = (char**)malloc(sizeof(char *) * cmd.num_token);
 
-	for(i = 0, savePtr = str1 = strdup(buf) ;; i++, str1 = NULL){
+	int i;
+	char *token, *ptr1, *str1, *placeholder;
+	command_line cmd;
+	cmd.num_token = count_token(buf, delim);
+
+	cmd.command_list = (char **)malloc(sizeof(char *) * cmd.num_token);
+
+	for(i = 0, placeholder = str1 = strdup(buf);; i++, str1 = NULL){
 		token = strtok_r(str1, delim, &ptr1);
 		if(token == NULL){
 			break;
 		}
-		cmd.command_list[i] = strdup(token); 
+		cmd.command_list[i] = strdup(token);
 	}
-	free(savePtr);
-	cmd.command_list[cmd.num_token - 1 ] = NULL;
-
+	cmd.command_list[i] = NULL;
+	free(placeholder);
 	return cmd;
 }
 
