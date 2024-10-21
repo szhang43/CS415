@@ -28,14 +28,12 @@ int main(int argc, char *argv[]){
     if(argc >= 3){
         if(strcmp(argv[1], "-f") == 0){
 
-            char buffer[1024];
-            ssize_t bytes;
-
             fd = fopen(argv[2], "r"); 
             outFd = fopen("output.txt", "w");
             output = freopen("output.txt", "w", stdout);
             if ((output == NULL) || (fd == NULL) || (outFd == NULL)) {
                 perror("Error redirecting output to file");
+                fclose(fd);
             }
         }   
     } 
@@ -44,11 +42,15 @@ int main(int argc, char *argv[]){
 
         if(argc >= 3 && strcmp(argv[1], "-f") == 0){
             lineSize = getline(&input, &storedInput, fd);
-            if(lineSize == -1) { break; }
+            if(lineSize == -1) { 
+                free(input);
+                break; 
+            }
         } else {
             write(STDOUT_FILENO, ">>> ", strlen(">>> "));
             lineSize = getline(&input, &storedInput, stdin);
             if(strcmp(input, "exit\n") == 0){
+                free(input);
                 break;
             }
         }
@@ -59,6 +61,7 @@ int main(int argc, char *argv[]){
             cmd.num_token -= 1;
             char *cmdInput = cmd.command_list[0];
             if(!cmd.command_list[0]){
+                free_command_line(&cmd);
                 continue;
             }
 
@@ -138,7 +141,7 @@ int main(int argc, char *argv[]){
         free_command_line(&wholeInput);
     }
 
-    if(argv[1]){
+    if(argc > 1){
         fclose(fd);
         fclose(outFd);
         fclose(output);

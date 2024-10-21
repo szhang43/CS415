@@ -1,13 +1,19 @@
 /home/sophie/CS415/pseudoShell
+mkdir: cannot create directory 'test': File exists
 .. . 
 /home/sophie/CS415/pseudoShell/test
 /home/sophie/CS415/pseudoShell/test
-.. . 
-/home/sophie/CS415/pseudoShell/test
-.. . 
-Error! File does not exist!
+input.txt .. . 
+pwd ; mkdir test ; cd test
+sfjlksagjlks;ls; pwd;
+cd .. ; cd test ; pwd
+cp ../input.txt . ; ls ; cat input.txt
+mv input.txt del.txt ; pwd ; ls
+rm del.txt ; ls
+cd .. ; pwd
+ls/home/sophie/CS415/pseudoShell/test
+del.txt .. . 
 .. . 
 /home/sophie/CS415/pseudoShell
-output.txt main.o input.txt .vscode Makefile main.c README.txt string_parser.o command.c .. . string_parser.h pseudo-shell string_parser.c test command.h command.o test_script.sh 
-output.txt main.o input.txt .vscode Makefile main.c README.txt string_parser.o command.c .. . string_parser.h pseudo-shell string_parser.c test command.h command.o test_script.sh 
-Command not found!
+output.txt source_text.txt main.o input.txt .vscode Makefile main.c README.txt string_parser.o command.c .. . string_parser.h pseudo-shell string_parser.c test command.h command.o test_script.sh 
+Error: command not found!
