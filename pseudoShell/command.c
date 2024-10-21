@@ -146,5 +146,6 @@ void displayFile(char *filename){
     while((bytes = read(fd, buffer, sizeof(buffer))) > 0){
         write(1, buffer, bytes);
     }
+    // write(1, "\n", strlen("\n"));
     close(fd);
 }; /*for the cat command*/
