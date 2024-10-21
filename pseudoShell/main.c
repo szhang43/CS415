@@ -32,16 +32,11 @@ int main(int argc, char *argv[]){
             ssize_t bytes;
 
             fd = fopen(argv[2], "r"); 
-            if (fd == NULL) {
-                perror("Error opening file!\n");
-                fclose(fd);
-            }
             outFd = fopen("output.txt", "w");
-            if (output == NULL) {
-                perror("Error redirecting output to file");
-                return 1;
-            }
             output = freopen("output.txt", "w", stdout);
+            if ((output == NULL) || (fd == NULL) || (outFd == NULL)) {
+                perror("Error redirecting output to file");
+            }
         }   
     } 
 
@@ -53,7 +48,7 @@ int main(int argc, char *argv[]){
                 break;
             }
         } else {
-            printf(">>> ");
+            write(STDOUT_FILENO, ">>> ", strlen(">>> "));
             lineSize = getline(&input, &storedInput, stdin);
             if(strcmp(input, "exit\n") == 0){
                 break;
@@ -88,18 +83,17 @@ int main(int argc, char *argv[]){
                 }
             } 
             else if(strcmp(cmdInput, "mkdir") == 0){
-                if(strcmp(cmdInput, "mkdir") == 0){
-                    if(cmd.num_token != 2){
-                        printf("Error: Too few or too many arguments for command : %s\n", cmdInput);
-                    }
-                    for(int i = 1; i < cmd.num_token; i++){
-                        if (cmd.command_list[i] == NULL) {
-                            printf("Error: Directory name cannot be NULL\n");
-                            continue;
-                        }
-                        makeDir(cmd.command_list[i]);
-                    }
+                if(cmd.num_token != 2){
+                    printf("Error: Too few or too many arguments for command : %s\n", cmdInput);
                 }
+                for(int i = 1; i < cmd.num_token; i++){
+                    if (cmd.command_list[i] == NULL) {
+                        printf("Error: Directory name cannot be NULL\n");
+                        continue;
+                    }
+                    makeDir(cmd.command_list[i]);
+                }
+            
             }
             else if(strcmp(cmdInput, "cd") == 0){
                 if(cmd.num_token != 2){
@@ -140,7 +134,7 @@ int main(int argc, char *argv[]){
                 }
             }
             else{
-                printf("Command not found!\n");
+                printf("Error: command not found!\n");
             }
 
             free_command_line(&cmd);

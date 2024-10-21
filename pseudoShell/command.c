@@ -69,19 +69,32 @@ void changeDir(char *dirName){
 }; /*for the cd command*/
 
 void copyFile(char *sourcePath, char *destinationPath){
-    char error[1024] = "Error opening file!\n";
+    char *sourceError = "Source path does not exist!\n";
+    char *destError = "Destination path does not exist!\n";
+    char otherError[1024] = "Rename Operation Failed\n";
     int sourceFd, destFd; 
     ssize_t bytes;
     char buffer[1024];
 
-    sourceFd = open(sourcePath, O_RDONLY);
-    destFd = open(destinationPath, O_CREAT | O_WRONLY, 0755);
+    struct stat sourceStat, destStat;
 
-    if(sourceFd == -1 || destFd == -1){
-        write(STDERR_FILENO, error, strlen(buffer));
-        close(sourceFd);
-        close(destFd);
-        return;
+    if (stat(destinationPath, &destStat) == 0 && S_ISDIR(destStat.st_mode)) {
+        char destFilePath[1024];
+        strcpy(destFilePath, destinationPath);  
+        strcat(destFilePath, "/");              
+        strcat(destFilePath, basename(sourcePath)); 
+   
+        destinationPath = destFilePath;
+    }
+
+    sourceFd = open(sourcePath, O_RDONLY);
+    destFd = open(destinationPath, O_CREAT | O_WRONLY | O_TRUNC, 0755);
+
+    if(sourceFd == -1){
+        write(STDERR_FILENO, sourceError, strlen(sourceError));
+    }
+    if(destFd == -1){
+        write(STDERR_FILENO, destError, strlen(destError));
     }
     
     while((bytes = read(sourceFd, buffer, sizeof(buffer))) > 0){
@@ -92,22 +105,23 @@ void copyFile(char *sourcePath, char *destinationPath){
 }; /*for the cp command*/
 
 void moveFile(char *sourcePath, char *destinationPath){
-    struct stat sourceStat, desStat; 
     char *sourceError = "Source path does not exist!\n";
     char *destError = "Destination path does not exist!\n";
     char otherError[1024] = "Rename Operation Failed\n";
 
-    char * baseName = basename(sourcePath);
-    char newDestPath[1024];
-    strcpy(newDestPath, destinationPath);
-    strcat(newDestPath, "/");
-    strcat(newDestPath, baseName); 
-    destinationPath = newDestPath;
+    struct stat sourceStat, destStat; 
+    if (stat(destinationPath, &destStat) == 0 && S_ISDIR(destStat.st_mode)) {
+        char newDestPath[1024];
+        strcpy(newDestPath, destinationPath);
+        strcat(newDestPath, "/");
+        strcat(newDestPath, basename(sourcePath)); 
+        destinationPath = newDestPath;
+    }
 
     if(rename(sourcePath, destinationPath) != 0){
         if (stat(sourcePath, &sourceStat) != 0){
             write(STDERR_FILENO, sourceError, strlen(sourceError));
-        } else if(stat(destinationPath, &desStat) != 0){
+        } else if(stat(destinationPath, &destStat) != 0){
             write(STDERR_FILENO, destError, strlen(destError));
         } else {
             write(STDERR_FILENO, otherError, strlen(otherError));
