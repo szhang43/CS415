@@ -44,9 +44,7 @@ int main(int argc, char *argv[]){
 
         if(argc >= 3 && strcmp(argv[1], "-f") == 0){
             lineSize = getline(&input, &storedInput, fd);
-            if(lineSize == -1) {
-                break;
-            }
+            if(lineSize == -1) { break; }
         } else {
             write(STDOUT_FILENO, ">>> ", strlen(">>> "));
             lineSize = getline(&input, &storedInput, stdin);
@@ -60,9 +58,7 @@ int main(int argc, char *argv[]){
             command_line cmd = str_filler(wholeInput.command_list[i], " ");
             cmd.num_token -= 1;
             char *cmdInput = cmd.command_list[0];
-            
-
-            if(cmd.command_list == NULL){
+            if(!cmd.command_list[0]){
                 continue;
             }
 
