@@ -10,12 +10,15 @@ void signaler(pid_t* pid_ary, int size, int signal)
 {
 	// sleep for three seconds
 
-	sleep(3);
+	sleep(1);
+    const char *signal_name = strsignal(signal);
 	for(int i = 0; i < size; i++)
 	{
 		// print: Parent process: <pid> - Sending signal: <signal> to child process: <pid>
 		// send the signal
-		printf("Parent process: %d - to child process: %d\n", signal, pid_ary[i]);
+		 printf("Parent process: %d - Sending signal: %s to child process: %d\n", 
+         getpid(), signal_name, pid_ary[i]);
+
 		kill(pid_ary[i], signal);
 	}
 }
@@ -38,6 +41,7 @@ int main(int argc,char*argv[])
     }
     char readCommand[1024]; //single command line from input file
 	pid_t *pid_array = malloc(10 * sizeof(pid_t));
+
 	sigset_t sigset;
 	int sig;
     sigemptyset(&sigset);
@@ -84,12 +88,16 @@ int main(int argc,char*argv[])
 			fclose(file);
 			exit(1);
 		} else if(pid == 0){ // fork has successfully created a child process
+            // send SIGUSR1 
             printf("Child Process: %d - Waiting for SIGUSR1...\n", getpid());
+
 			// wait for the signal
 			sigwait(&sigset, &sig);
+
 			// print: Child Process: <pid> - Received signal: SIGUSR1 - Calling exec().
 			printf("Child Process: %d - Received signal: SIGUSR1 - Calling exec().\n", getpid());
-			if(execvp(args[0], args)){
+			
+            if(execvp(args[0], args)){
 				printf("Execvp Failed for command : %s\n", args[0]);
 				fclose(file);
 				exit(1);	
@@ -100,16 +108,16 @@ int main(int argc,char*argv[])
 	}
 	// send SIGUSR1 
 	signaler(pid_array, pids, SIGUSR1);
+    printf("1\n");
 
 	// send SIGSTOP 
 	signaler(pid_array, pids, SIGSTOP);
+    printf("2\n");
 
 	// send SIGCONT
 	signaler(pid_array, pids, SIGCONT);
+    printf("3\n");
 
-	// send SIGINT
-	signaler(pid_array, pids, SIGINT);
-    //determine how many processes are there 
 	for(int i = 0; i < pids; i++){
 		waitpid(pid_array[i], NULL, 0);
 	}
