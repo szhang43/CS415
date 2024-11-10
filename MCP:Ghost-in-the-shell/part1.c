@@ -7,23 +7,29 @@
 
 int main(int argc,char*argv[])
 {
-	if (argc != 2)
+	if (argc > 3)
 	{
 		printf ("Wrong number of arguments\n");
 		exit (0);
 	}
 	int count = 0;
 	int pids = 0;
+	
+	if(strcmp(argv[1], "-f") != 0){
+		printf("Include -f flag to use filemode!\n");
+		exit(1);
+	}
+
     // Open file
-    FILE *file = fopen(argv[1], "r");
-    if(file == NULL){
-        printf("Error reading file!\n");
+    FILE *file = fopen(argv[2], "r");
+	if(file == NULL){
+        perror("Error opening file");
+		exit(1);
     }
     char readCommand[1024]; //single command line from input file
 	pid_t *pid_array = malloc(10 * sizeof(pid_t));
-	
 
-	printf("-----------------------------------------\n");
+	// printf("-----------------------------------------\n");
     while(fgets(readCommand, sizeof(readCommand), file)){ // reads each line from the input until NULL
 		size_t len = strlen(readCommand); // This block removed the newline character
         if (len > 0 && readCommand[len - 1] == '\n') {
@@ -36,12 +42,12 @@ int main(int argc,char*argv[])
 		count++; // count how many flags and parameters are there
 		if (command != NULL) { // check if command is null
 			args[0] = command; // Store the command in args[0]
-			printf("Command(args[0]) : %s\n", args[0]);
+			// printf("Command(args[0]) : %s\n", args[0]);
 			while(command != NULL){ // run until it has reached the end of the line
 				command = strtok(NULL, " ");
 				if(command != NULL){
 					args[i] = command; 
-					printf("args[%d]: %s\n", i, args[i]);
+					// printf("args[%d]: %s\n", i, args[i]);
 					i++;
 				} 
 			}
@@ -50,7 +56,7 @@ int main(int argc,char*argv[])
 			exit(1);
 		}
 
-		printf("-----------------------------------------\n");
+		// printf("-----------------------------------------\n");
 		args[i] = NULL; // terminates args array
 
 		pid_t pid = fork(); // create a child process for each command from input file

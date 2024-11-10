@@ -19,7 +19,9 @@ void signaler(pid_t* pid_ary, int size, int signal)
 		 printf("Parent process: %d - Sending signal: %s to child process: %d\n", 
          getpid(), signal_name, pid_ary[i]);
 
-		kill(pid_ary[i], signal);
+		if(kill(pid_ary[i], signal) == -1){
+            perror("Failed to send signal!");
+        };
 	}
 }
 
@@ -27,17 +29,24 @@ void signaler(pid_t* pid_ary, int size, int signal)
 
 int main(int argc,char*argv[])
 {
-	if (argc != 2)
+	if (argc > 3)
 	{
 		printf ("Wrong number of arguments\n");
 		exit (0);
 	}
 	int count = 0;
 	int pids = 0;
+
+    if(strcmp(argv[1], "-f") != 0){
+		printf("Include -f flag to use filemode!\n");
+		exit(1);
+	}
+
     // Open file
-    FILE *file = fopen(argv[1], "r");
+    FILE *file = fopen(argv[2], "r");
     if(file == NULL){
-        printf("Error reading file!\n");
+        perror("Error reading file!");
+        exit(1);
     }
     char readCommand[1024]; //single command line from input file
 	pid_t *pid_array = malloc(10 * sizeof(pid_t));
@@ -92,7 +101,11 @@ int main(int argc,char*argv[])
             printf("Child Process: %d - Waiting for SIGUSR1...\n", getpid());
 
 			// wait for the signal
-			sigwait(&sigset, &sig);
+			if(sigwait(&sigset, &sig)){
+                perror("Sigwait failed!");
+                fclose(file);
+                exit(1);
+            };
 
 			// print: Child Process: <pid> - Received signal: SIGUSR1 - Calling exec().
 			printf("Child Process: %d - Received signal: SIGUSR1 - Calling exec().\n", getpid());
@@ -108,18 +121,18 @@ int main(int argc,char*argv[])
 	}
 	// send SIGUSR1 
 	signaler(pid_array, pids, SIGUSR1);
-    printf("1\n");
 
 	// send SIGSTOP 
 	signaler(pid_array, pids, SIGSTOP);
-    printf("2\n");
 
 	// send SIGCONT
 	signaler(pid_array, pids, SIGCONT);
-    printf("3\n");
 
 	for(int i = 0; i < pids; i++){
-		waitpid(pid_array[i], NULL, 0);
+		if(waitpid(pid_array[i], NULL, 0) == -1){
+            perror("Error waiting for child processes!");
+            exit(1);
+        };
 	}
 
 	free(pid_array);
