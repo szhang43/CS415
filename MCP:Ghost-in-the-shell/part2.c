@@ -25,7 +25,21 @@ void signaler(pid_t* pid_ary, int size, int signal)
 	}
 }
 
+int countLine(char *filename){
+    int totalLines = 0;
+    char lines[1024];
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error reading file!");
+        exit(1);
+    }
+    while(fgets(lines, sizeof(lines), file)){
+        totalLines++;
+    }
+    fclose(file);
+    return totalLines;
 
+}
 
 int main(int argc,char*argv[])
 {
@@ -49,7 +63,8 @@ int main(int argc,char*argv[])
         exit(1);
     }
     char readCommand[1024]; //single command line from input file
-	pid_t *pid_array = malloc(10 * sizeof(pid_t));
+    int commandLine = countLine(argv[2]);
+	pid_t *pid_array = malloc(commandLine * sizeof(pid_t));
 
 	sigset_t sigset;
 	int sig;

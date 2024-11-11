@@ -5,6 +5,22 @@
 #include <sys/wait.h>
 #include <string.h>
 
+int countLine(char *filename){
+		int totalLines = 0;
+		char lines[1024];
+		FILE *file = fopen(filename, "r");
+		if (file == NULL) {
+			perror("Error reading file!");
+			exit(1);
+		}
+		while(fgets(lines, sizeof(lines), file)){
+			totalLines++;
+		}
+		fclose(file);
+		return totalLines;
+
+}
+
 int main(int argc,char*argv[])
 {
 	if (argc > 3)
@@ -27,9 +43,11 @@ int main(int argc,char*argv[])
 		exit(1);
     }
     char readCommand[1024]; //single command line from input file
-	pid_t *pid_array = malloc(10 * sizeof(pid_t));
+    int commandLine = countLine(argv[2]);
+	pid_t *pid_array = malloc(commandLine * sizeof(pid_t));
 
 	// printf("-----------------------------------------\n");
+
     while(fgets(readCommand, sizeof(readCommand), file)){ // reads each line from the input until NULL
 		size_t len = strlen(readCommand); // This block removed the newline character
         if (len > 0 && readCommand[len - 1] == '\n') {

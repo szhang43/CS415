@@ -16,55 +16,45 @@ sigset_t sigset;
 int sig;
 
 void waiting(){
-    for(int i = 0; i < pids; i++){
-        waitpid(pid_array[i], NULL, 0);
-    }
-}
-
-void terminating() {
     for (int i = 0; i < pids; i++) {
-        if (pid_array[i] != -1) {  // Only check active processes
-            int status; 
-            pid_t result = waitpid(pid_array[i], &status, WNOHANG);
+        if (pid_array[i] != -1) {
+            int status;
+            pid_t result = waitpid(pid_array[i], &status, 0); // Wait for process to exit
 
             if (result > 0) {  // A child process has changed state
                 if (WIFEXITED(status)) {
-                    printf("Process %d exited normally with status %d.\n", pid_array[i], WEXITSTATUS(status));
-                } else if (WIFSIGNALED(status)) {
-                    printf("Process %d was terminated by signal %d.\n", pid_array[i], WTERMSIG(status));
+                    // You can process the exit status if needed without printing it
+                    int exit_status = WEXITSTATUS(status);
                 }
                 pid_array[i] = -1;  // Mark process as terminated
-            } else if (result == 0) {
-                // Process is still running
             } else if (result < 0) {
                 if (errno != ECHILD) {  // Ignore "No child processes" errors here
                     perror("waitpid error");
                 }
             }
         }
-    }
+    }   
 }
 
-
+/* Round Robin Scheduler: Switches to Next Process Each Time Slice */
 void round_robin(int sig) {
-    terminating();
-
-    
-    while (pid_array[current_process] == -1) {
-        current_process = (current_process + 1) % pids;
-    }
-
+    // Stop the currently running process, if active
     if (pid_array[current_process] != -1) {
-        // printf("Current pid array process : %d\n", pid_array[current_process]);
-        // Continue the current process
-        kill(pid_array[current_process], SIGCONT);
-        printf("Scheduling next process: PID: %d\n", pid_array[current_process]);
-
-        current_process = (current_process + 1) % pids;
-        alarm(1);  // 1-second time slice
-
         kill(pid_array[current_process], SIGSTOP);
     }
+    
+    // Move to the next process
+    current_process = (current_process + 1) % pids;
+    while (pid_array[current_process] == -1) { // Skip terminated processes
+        current_process = (current_process + 1) % pids;
+    }
+
+    // // Continue the next process
+    kill(pid_array[current_process], SIGCONT);
+    printf("Scheduling Process: PID: %d\n", pid_array[current_process]);
+
+    // Set the alarm for the next time slice
+    alarm(1);
 }
 
 void scheduler() {
@@ -72,18 +62,21 @@ void scheduler() {
     alarm(1);
 }
 
-void remaining() {
-    for (int i = 0; i < pids; i++) {
-        if (pid_array[i] == -1) continue;  // Skip completed processes
-        int status;
-        pid_t child_pid = waitpid(pid_array[i], &status, 0);
-        if (child_pid == -1) {
-            perror("waitpid failed...");
-        } else if (WIFEXITED(status)) {
-            printf("Parent Process: Child %d exited normally with status %d.\n", child_pid, WEXITSTATUS(status));
-        }
+int countLine(char *filename){
+    int totalLines = 0;
+    char lines[1024];
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error reading file!");
+        fclose(file);
+        exit(1);
     }
-    printf("All processes have finished executing...\n");
+    while(fgets(lines, sizeof(lines), file)){
+        totalLines++;
+    }
+    fclose(file);
+    return totalLines;
+
 }
 
 int main(int argc, char *argv[]) {
@@ -98,22 +91,27 @@ int main(int argc, char *argv[]) {
     }
 
     // Open file
+
     FILE *file = fopen(argv[2], "r");
     if (file == NULL) {
         perror("Error reading file!");
+        fclose(file);
         exit(1);
     }
-
+    
     char readCommand[1024]; // single command line from input file
-    pid_array = malloc(10 * sizeof(pid_t));
+    int commandLine = countLine(argv[2]);
+    pid_array = malloc(commandLine * sizeof(pid_t));
+    if (pid_array == NULL) {
+        perror("Memory allocation failed");
+        exit(1);
+    }
 
     sigemptyset(&sigset);
     // Add CONT to the signal set
     sigaddset(&sigset, SIGCONT);
     // Block SIGALRM signal
     sigprocmask(SIG_BLOCK, &sigset, NULL);
-
-    scheduler();
 
     while (fgets(readCommand, sizeof(readCommand), file)) { // reads each line from the input until NULL
         size_t len = strlen(readCommand); // This block removes the newline character
@@ -143,7 +141,7 @@ int main(int argc, char *argv[]) {
         pid_t pid = fork(); // create a child process for each command from the input file
         
         if (pid < 0) { // fork failed
-            printf("Failed to fork process\n");
+            perror("Fork failed");
             fclose(file);
             exit(1);
         } else if (pid == 0) { // child process
@@ -152,14 +150,21 @@ int main(int argc, char *argv[]) {
                     perror("Execvp Failed");
                     exit(1);
                 }
+            } else {
+                perror("sigwait failed");
+                exit(1);
             }
         } else { // parent process
             pid_array[pids++] = pid;
         }
     }
-
+    scheduler();
     waiting();
+
     free(pid_array);
+    
     fclose(file);
+
+    printf("All processes have completed.\n");
     return 0;
 }
