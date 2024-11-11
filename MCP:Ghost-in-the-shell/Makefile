@@ -4,7 +4,7 @@ CC = gcc
 all: mcp
 
 # Target mcp to build part1, iobound, and cpubound
-mcp: part1 part2 part3 part4 iobound cpubound
+mcp: part1 part2 part3 part4 part5 iobound cpubound
 
 # Compile and build part1 executable
 part1: part1.c
@@ -20,6 +20,9 @@ part3: part3.c
 part4: part4.c
 	$(CC) -o part4 part4.c
 
+part5: part5.c
+	$(CC) -o part5 part5.c
+
 
 # Compile and build iobound executable
 iobound: iobound.c
@@ -31,4 +34,4 @@ cpubound: cpubound.c
 
 # Clean up executables
 clean:
-	rm -f part1 part2 part3 part4 iobound cpubound
+	rm -f part1 part2 part3 part4 part5 iobound cpubound

@@ -120,7 +120,6 @@ void round_robin(int sig) {
 }
 
 void scheduler() {
-    // printf("Starting Wrong Robin\n");
     signal(SIGALRM, round_robin);
     alarm(1);
 }
