@@ -58,6 +58,7 @@ void round_robin(int sig) {
 }
 
 void scheduler() {
+    // printf("Starting Wrong Robin\n");
     signal(SIGALRM, round_robin);
     alarm(1);
 }
@@ -98,12 +99,14 @@ int main(int argc, char *argv[]) {
         fclose(file);
         exit(1);
     }
-    
+
     char readCommand[1024]; // single command line from input file
     int commandLine = countLine(argv[2]);
     pid_array = malloc(commandLine * sizeof(pid_t));
     if (pid_array == NULL) {
         perror("Memory allocation failed");
+        free(pid_array);
+        fclose(file);
         exit(1);
     }
 
@@ -134,6 +137,8 @@ int main(int argc, char *argv[]) {
             }
         } else {
             printf("Failed to read commands from input file!\n");
+            free(pid_array);
+            fclose(file);
             exit(1);
         }
 
@@ -148,10 +153,14 @@ int main(int argc, char *argv[]) {
             if (sigwait(&sigset, &sig) == 0) {
                 if (execvp(args[0], args) == -1) {
                     perror("Execvp Failed");
+                    free(pid_array);
+                    fclose(file);
                     exit(1);
                 }
             } else {
                 perror("sigwait failed");
+                free(pid_array);
+                fclose(file);
                 exit(1);
             }
         } else { // parent process

@@ -27,7 +27,7 @@ void get_process_info(int pid) {
     char path[MAX_PROC_NAME_LEN];
     FILE *fp;
     char buf[1024];
-    long utime, stime, time, nice, virt_mem;
+    long utime, stime, nice, virt_mem;
     int process_pid;
 
     // Get the number of clock ticks per second
@@ -54,9 +54,13 @@ void get_process_info(int pid) {
         return;
     }
 
+    // printf("Buffer : %s\n", buf);
     // Parse the stat file (skip the command name)
-    sscanf(buf, "%d %*s %*c %*d %*d %*d %*d %*d %*d %ld %ld %ld %ld %ld",
-           &process_pid, &utime, &stime, &time, &nice, &virt_mem);
+    sscanf(buf, "%d %*s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %ld %*ld %*ld %*llu %lu", 
+       &process_pid, &utime, &stime, &nice, &virt_mem);
+
+    // sscanf(buf, "%d %*s %*c %*d %*d %*d %*d %*d %*d %ld %ld %ld %*ld %*d %ld %ld %*ld %*d %ld %*d %ld %*d %ld",
+    //        &process_pid, &utime, &stime, &time, &nice, &virt_mem);
 
     // Close the file
     fclose(fp);
@@ -106,25 +110,23 @@ void round_robin(int sig) {
 
     // // Continue the next process
     kill(pid_array[current_process], SIGCONT);
-    printf("Scheduling Process: PID: %d\n", pid_array[current_process]);
+    // printf("Scheduling Process: PID: %d\n", pid_array[current_process]);
 
-     cycle_count++;
-    if (cycle_count >= pids) {
-        // Display process info for all processes in the cycle
+    cycle_count++;
+    if (cycle_count % 2 == 0) { // Full cycle completed
         printf("\nPID\tutime\tstime\ttime\tnice\tvirt mem\n");
-
         for (int i = 0; i < pids; i++) {
             if (pid_array[i] != -1) {
                 get_process_info(pid_array[i]);
             }
         }
-        cycle_count = 0; // Reset cycle count after each full cycle
     }
     // Set the alarm for the next time slice
     alarm(1);
 }
 
 void scheduler() {
+    printf("Starting Wrong Robin\n");
     signal(SIGALRM, round_robin);
     alarm(1);
 }
@@ -171,6 +173,8 @@ int main(int argc, char *argv[]) {
     pid_array = malloc(commandLine * sizeof(pid_t));
     if (pid_array == NULL) {
         perror("Memory allocation failed");
+        free(pid_array);
+        fclose(file);
         exit(1);
     }
 
@@ -201,6 +205,8 @@ int main(int argc, char *argv[]) {
             }
         } else {
             printf("Failed to read commands from input file!\n");
+            fclose(file);
+            free(pid_array);
             exit(1);
         }
 
@@ -209,16 +215,21 @@ int main(int argc, char *argv[]) {
         
         if (pid < 0) { // fork failed
             perror("Fork failed");
+            free(pid_array);
             fclose(file);
             exit(1);
         } else if (pid == 0) { // child process
             if (sigwait(&sigset, &sig) == 0) {
                 if (execvp(args[0], args) == -1) {
                     perror("Execvp Failed");
+                    free(pid_array);
+                    fclose(file);
                     exit(1);
                 }
             } else {
                 perror("sigwait failed");
+                free(pid_array);
+                fclose(file);
                 exit(1);
             }
         } else { // parent process
