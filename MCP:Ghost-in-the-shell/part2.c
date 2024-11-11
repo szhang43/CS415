@@ -112,6 +112,7 @@ int main(int argc,char*argv[])
 			
             if(execvp(args[0], args)){
 				printf("Execvp Failed for command : %s\n", args[0]);
+                if(pid_array) free(pid_array);
 				fclose(file);
 				exit(1);	
 			}

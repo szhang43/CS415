@@ -63,11 +63,13 @@ int main(int argc,char*argv[])
 		if (pid < 0) { // fork failed in some way...
 			printf("Failed to allocate memory for pid array\n");
 			fclose(file);
+			if(pid_array) free(pid_array);
 			exit(1);
 		} else if(pid == 0){ // fork has successfully created a child process
 			if(execvp(args[0], args)){
 				printf("Execvp Failed for command : %s\n", args[0]);
 				fclose(file);
+				if(pid_array) free(pid_array);
 				exit(1);	
 			}
 		} else { // I don't really understand how this works actually...
