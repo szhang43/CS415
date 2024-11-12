@@ -1,0 +1,49 @@
+==48935== Memcheck, a memory error detector
+==48935== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==48935== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info
+==48935== Command: ./part1 -f input.txt
+==48935== 
+total 204
+ 8 part5.c
+20 part5
+ 8 part4.c
+20 part4
+ 8 part3.c
+20 part3
+ 8 part2.c
+20 part2
+ 4 part1.c
+20 part1
+ 4 Makefile
+ 4 log1.txt
+ 4 iobound.c
+20 iobound
+ 4 input.txt
+ 4 cpubound.c
+16 cpubound
+ 4 arch64_example_executables
+ 4 ..
+ 4 .
+Execvp Failed for command : invalid
+==48939== 
+==48939== HEAP SUMMARY:
+==48939==     in use at exit: 0 bytes in 0 blocks
+==48939==   total heap usage: 6 allocs, 6 frees, 13,252 bytes allocated
+==48939== 
+==48939== All heap blocks were freed -- no leaks are possible
+==48939== 
+==48939== For lists of detected and suppressed errors, rerun with: -s
+==48939== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+Process: 48941 - Begining calculation.
+Process: 48941 - Finished.
+Process: 48940 - Begining to write to file.
+Process: 48940 - Finished.
+==48935== 
+==48935== HEAP SUMMARY:
+==48935==     in use at exit: 0 bytes in 0 blocks
+==48935==   total heap usage: 5 allocs, 5 frees, 9,156 bytes allocated
+==48935== 
+==48935== All heap blocks were freed -- no leaks are possible
+==48935== 
+==48935== For lists of detected and suppressed errors, rerun with: -s
+==48935== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

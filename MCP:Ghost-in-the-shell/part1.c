@@ -70,7 +70,7 @@ int main(int argc,char*argv[])
 				} 
 			}
 		} else {
-			printf("Failed to read commands from input file!\n");
+			// printf("Failed to read commands from input file!\n");
 			exit(1);
 		}
 

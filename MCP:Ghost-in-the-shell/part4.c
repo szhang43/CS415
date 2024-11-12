@@ -74,13 +74,10 @@ void waiting(){
         if (pid_array[i] != -1) {
             int status;
             pid_t result = waitpid(pid_array[i], &status, 0); // Wait for process to exit
-
             if (result > 0) {  // A child process has changed state
                 if (WIFEXITED(status)) {
-                    // You can process the exit status if needed without printing it
-                    int exit_status = WEXITSTATUS(status);
+                    pid_array[i] = -1;  // Mark process as terminated
                 }
-                pid_array[i] = -1;  // Mark process as terminated
             } else if (result < 0) {
                 if (errno != ECHILD) {  // Ignore "No child processes" errors here
                     perror("waitpid error");
