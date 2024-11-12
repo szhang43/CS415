@@ -140,9 +140,9 @@ int countLine(char *filename){
 }
 
 int main(int argc, char *argv[]) {
-    if (argc > 3) {
+    if (argc != 3) {
         printf("Wrong number of arguments\n");
-        exit(0);
+        exit(1);
     }
 
     if (strcmp(argv[1], "-f") != 0) {

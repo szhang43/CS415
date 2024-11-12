@@ -43,11 +43,10 @@ int countLine(char *filename){
 
 int main(int argc,char*argv[])
 {
-	if (argc > 3)
-	{
-		printf ("Wrong number of arguments\n");
-		exit (0);
-	}
+    if (argc != 3) {
+        printf("Wrong number of arguments\n");
+        exit(1);
+    }
 	int count = 0;
 	int pids = 0;
 
