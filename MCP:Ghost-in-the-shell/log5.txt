@@ -1,0 +1,110 @@
+==61310== Memcheck, a memory error detector
+==61310== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==61310== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info
+==61310== Command: ./part5 -f input.txt
+==61310== 
+Execvp Failed: No such file or directory
+==61313== 
+==61313== HEAP SUMMARY:
+==61313==     in use at exit: 0 bytes in 0 blocks
+==61313==   total heap usage: 6 allocs, 6 frees, 9,176 bytes allocated
+==61313== 
+==61313== All heap blocks were freed -- no leaks are possible
+==61313== 
+==61313== For lists of detected and suppressed errors, rerun with: -s
+==61313== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+total 220
+ 8 part5.c
+20 part5
+ 8 part4.c
+20 part4
+ 8 part3.c
+20 part3
+ 8 part2.c
+20 part2
+ 4 part1.c
+20 part1
+ 4 Makefile
+ 4 log5.txt
+ 4 log4.txt
+ 4 log3.txt
+ 4 log2.txt
+ 4 log1.txt
+ 4 iobound.c
+20 iobound
+ 4 input.txt
+ 4 cpubound.c
+16 cpubound
+ 4 arch64_example_executables
+ 4 ..
+ 4 .
+Process: 61315 - Begining calculation.
+Process: 61315 - Finished.
+Process: 61314 - Begining to write to file.
+Process: 61314 - Finished.
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61311 0.000000 0.000000 0.000000   0   99819520  1.500000 CPU Bound
+61312 0.010000 0.000000 0.010000   0   5595136  1.000000 I/O Bound
+61313 0.030000 0.000000 0.030000   0   99893248  1.000000 I/O Bound
+61314 0.000000 0.000000 0.000000   0   99819520  1.500000 CPU Bound
+61315 0.000000 0.000000 0.000000   0   99819520  2.000000 CPU Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61311 0.000000 0.000000 0.000000   0   99819520  1.500000 CPU Bound
+61312 0.010000 0.000000 0.010000   0   5595136  1.000000 I/O Bound
+61313 0.030000 0.000000 0.030000   0   0  1.000000 I/O Bound
+61314 0.830000 0.140000 0.970000   0   2519040  1.000000 I/O Bound
+61315 0.000000 0.000000 0.000000   0   99819520  1.500000 CPU Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61312 0.010000 0.000000 0.010000   0   0  1.000000 I/O Bound
+61313 0.030000 0.000000 0.030000   0   0  1.000000 I/O Bound
+61314 0.830000 0.140000 0.970000   0   2519040  1.000000 I/O Bound
+61315 0.670000 0.320000 0.990000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 1.740000 0.230000 1.970000   0   2519040  1.000000 I/O Bound
+61315 0.670000 0.320000 0.990000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 2.670000 0.300000 2.970000   0   2519040  1.000000 I/O Bound
+61315 1.350000 0.640000 1.990000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 3.600000 0.370000 3.970000   0   2519040  1.000000 I/O Bound
+61315 2.030000 0.970000 3.000000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 4.520000 0.440000 4.960000   0   2519040  1.000000 I/O Bound
+61315 2.750000 1.250000 4.000000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 5.460000 0.510000 5.970000   0   2519040  1.000000 I/O Bound
+61315 3.430000 1.570000 5.000000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 6.400000 0.570000 6.970000   0   2519040  1.000000 I/O Bound
+61315 4.080000 1.910000 5.990000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 7.320000 0.640000 7.960000   0   2519040  1.000000 I/O Bound
+61315 4.790000 2.210000 7.000000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 8.230000 0.740000 8.970000   0   2519040  1.000000 I/O Bound
+61315 5.450000 2.550000 8.000000   0   2519040  1.000000 I/O Bound
+
+PID	utime	stime	time	nice	virt mem timeslice  type
+61314 9.160000 0.800000 9.960000   0   2519040  1.000000 I/O Bound
+61315 6.120000 2.870000 8.990000   0   2519040  1.000000 I/O Bound
+All processes have completed.
+==61310== 
+==61310== HEAP SUMMARY:
+==61310==     in use at exit: 0 bytes in 0 blocks
+==61310==   total heap usage: 71 allocs, 71 frees, 61,144 bytes allocated
+==61310== 
+==61310== All heap blocks were freed -- no leaks are possible
+==61310== 
+==61310== For lists of detected and suppressed errors, rerun with: -s
+==61310== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

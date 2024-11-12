@@ -13,11 +13,14 @@ int count = 0; // how many commands in a file
 int pids = 0; // how many processes in pid_array
 int current_process = 0;
 int cycle_count = 0; 
+float *timeslices; 
+
 sigset_t sigset;
 int sig;
 #define MAX_PROC_NAME_LEN 256
+#define MIN_TIME_SLICE 1
 
-void get_process_info(int pid) {
+void get_process_info(int pid, int curr_process, char *process_type) {
     char path[MAX_PROC_NAME_LEN];
     FILE *fp;
     char buf[1024];
@@ -53,20 +56,34 @@ void get_process_info(int pid) {
     sscanf(buf, "%d %*s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %ld %*ld %*ld %*llu %lu", 
        &process_pid, &utime, &stime, &nice, &virt_mem);
 
-    // sscanf(buf, "%d %*s %*c %*d %*d %*d %*d %*d %*d %ld %ld %ld %*ld %*d %ld %ld %*ld %*d %ld %*d %ld %*d %ld",
-    //        &process_pid, &utime, &stime, &time, &nice, &virt_mem);
-
+    
     // Close the file
     fclose(fp);
 
+    if (utime > stime) {  // More I/O bound
+        if(timeslices[curr_process] - 0.5 > MIN_TIME_SLICE){
+            timeslices[curr_process] -= 0.5;
+        } else {
+            timeslices[curr_process] = MIN_TIME_SLICE;
+        }
+        strcpy(process_type, "I/O Bound");
+    } else {  // More compute bound
+        timeslices[curr_process] += 0.5;  // Increment time slice for I/O-bound processes
+        strcpy(process_type, "CPU Bound");
+    }
+    // printf("Updated timeslice for process %d: %.2f\n", process_pid, *timeslice);
+
+
     // Print the information with full precision
-    printf("%d %.6f %.6f %.6f   %d   %lu\n",
+    printf("%d %.6f %.6f %.6f   %d   %lu  %.6f %s\n",
            process_pid, 
            (float)utime / clk_tck,    // Convert utime to seconds
            (float)stime / clk_tck,    // Convert stime to seconds
            (float)(utime + stime) / clk_tck,  // Convert total time to seconds
            nice, 
-           virt_mem);
+           virt_mem,
+           timeslices[curr_process],
+           process_type);
 }
 
 void waiting(){
@@ -74,7 +91,6 @@ void waiting(){
         if (pid_array[i] != -1) {
             int status;
             pid_t result = waitpid(pid_array[i], &status, 0); // Wait for process to exit
-
             if (result > 0) {  // A child process has changed state
                 if (WIFEXITED(status)) {
                     pid_array[i] = -1;  // Mark process as terminated
@@ -100,24 +116,28 @@ void round_robin(int sig) {
         current_process = (current_process + 1) % pids;
     }
 
-    // // Continue the next process
+    char process_type[16];
+    float timeslice = timeslices[current_process];  // Get the time slice for the current process
+
+    // Continue the next process
     kill(pid_array[current_process], SIGCONT);
     // printf("Scheduling Process: PID: %d\n", pid_array[current_process]);
 
     cycle_count++;
     if (cycle_count % 2 == 0) { // Full cycle completed
-        printf("\nPID\tutime\tstime\ttime\tnice\tvirt mem\n");
+        printf("\nPID\tutime\tstime\ttime\tnice\tvirt mem timeslice  type\n");
         for (int i = 0; i < pids; i++) {
             if (pid_array[i] != -1) {
-                get_process_info(pid_array[i]);
+                get_process_info(pid_array[i], current_process, process_type);
             }
         }
     }
     // Set the alarm for the next time slice
-    alarm(1);
+    alarm(timeslices[current_process]);
 }
 
 void scheduler() {
+    // printf("Starting Wrong Robin\n");
     signal(SIGALRM, round_robin);
     alarm(1);
 }
@@ -162,11 +182,18 @@ int main(int argc, char *argv[]) {
     char readCommand[1024]; // single command line from input file
     int commandLine = countLine(argv[2]);
     pid_array = malloc(commandLine * sizeof(pid_t));
+    timeslices = malloc(commandLine * sizeof(float)); 
+
     if (pid_array == NULL) {
         perror("Memory allocation failed");
         free(pid_array);
+        free(timeslices);
         fclose(file);
         exit(1);
+    }   
+
+    for (int i = 0; i < commandLine; i++) {
+        timeslices[i] = 1.0;
     }
 
     sigemptyset(&sigset);
@@ -214,12 +241,14 @@ int main(int argc, char *argv[]) {
                 if (execvp(args[0], args) == -1) {
                     perror("Execvp Failed");
                     free(pid_array);
+                    free(timeslices);
                     fclose(file);
                     exit(1);
                 }
             } else {
                 perror("sigwait failed");
                 free(pid_array);
+                free(timeslices);
                 fclose(file);
                 exit(1);
             }
@@ -227,10 +256,14 @@ int main(int argc, char *argv[]) {
             pid_array[pids++] = pid;
         }
     }
+    // After the processes have been created and the timeslices are initialized
+
     scheduler();
     waiting();
 
+
     free(pid_array);
+    free(timeslices);
     
     fclose(file);
 
