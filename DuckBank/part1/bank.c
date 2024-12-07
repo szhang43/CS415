@@ -62,38 +62,40 @@ int findAccount(int numAccounts, account *accounts, const char *accountNumber) {
 }
 
 void processTransaction(account * accounts, int numAccounts, char *transactionDetails) {    
-    char *type = strtok(transactionDetails, " ");
-    if(type == NULL) return;
-    
-    char *accountNumber = strtok(NULL, " ");
+    char *saveptr; // Pointer to store the context
 
-    char *password = strtok(NULL, " ");
-    if(!password && !accountNumber) return;
+    // Tokenize using strtok_r
+    char *type = strtok_r(transactionDetails, " ", &saveptr);
+    if (type == NULL) return;
 
-    int account_index = findAccount(numAccounts, accounts, accountNumber);
-    if (account_index == -1) return;
+    char *accountNumber = strtok_r(NULL, " ", &saveptr);
+    char *password = strtok_r(NULL, " ", &saveptr);
+    if (!password && !accountNumber) return;
 
-    if(strcmp(accounts[account_index].password, password) != 0) return;
-    
-    if(strcmp("T", type) == 0){
-        char *transferAccount = strtok(NULL, " ");
-        double transferAmount = atof(strtok(NULL, " "));
+    int accountIndex = findAccount(numAccounts, accounts, accountNumber);
+    if (accountIndex == -1) return ;
+    if (strcmp(accounts[accountIndex].password, password) != 0) return ;
+
+    if (strcmp("T", type) == 0) {
+        char *transferAccount = strtok_r(NULL, " ", &saveptr);
+        double transferAmount = atof(strtok_r(NULL, " ", &saveptr));
         int transferIndex = findAccount(numAccounts, accounts, transferAccount);
-        accounts[account_index].balance -= transferAmount;
+        accounts[accountIndex].balance -= transferAmount;
         accounts[transferIndex].balance += transferAmount;
-        accounts[account_index].transaction_tracter += transferAmount;
-    } else if(strcmp("C", type) == 0) {
+        accounts[accountIndex].transaction_tracter += transferAmount;
+    } else if (strcmp("C", type) == 0) {
         return;
-    } else if(strcmp("D", type) == 0){
-        double depositAmount = atof(strtok(NULL, " "));
-        accounts[account_index].balance += depositAmount;
-        accounts[account_index].transaction_tracter += depositAmount;
-       
-    } else if(strcmp("W", type) == 0) {
-        double withdrawlAmount = atof(strtok(NULL, " "));
-        accounts[account_index].balance -= withdrawlAmount;
-        accounts[account_index].transaction_tracter += withdrawlAmount;
+    } else if (strcmp("D", type) == 0) {
+        double depositAmount = atof(strtok_r(NULL, " ", &saveptr));
+        accounts[accountIndex].balance += depositAmount;
+        accounts[accountIndex].transaction_tracter += depositAmount;
+
+    } else if (strcmp("W", type) == 0) {
+        double withdrawlAmount = atof(strtok_r(NULL, " ", &saveptr));
+        accounts[accountIndex].balance -= withdrawlAmount;
+        accounts[accountIndex].transaction_tracter += withdrawlAmount;
     }
+
     return;
 }
 
@@ -118,4 +120,3 @@ void printBalance(account *accounts, int numAccounts){
     fclose(output);
     return;
 }
-
