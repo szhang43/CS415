@@ -35,52 +35,48 @@ int main(int argc, char *argv[]){
     }
 
     int AccountInfoLines;
-    int numTransactions = getNumTransaction(argv[1]);
+    AccountInfoLines = (numAccounts * 5);
+    int numTransactions = getNumTransaction(argv[1]) - AccountInfoLines - 1;
     int transactionsPerWorker = numTransactions / NUM_WORKERS;
     int extraTransactions = numTransactions % NUM_WORKERS;
-
     thread_ids = (pthread_t *)malloc(sizeof(pthread_t) * NUM_WORKERS); // Number of worker threads to work concurrently
     
     accountInit(numAccounts, accounts, file);
+    fclose(file);
     
     for (int i = 0; i < NUM_WORKERS; i++) {
-        AccountInfoLines = (numAccounts * 5);
         TransactionArgs *args = malloc(sizeof(TransactionArgs));
         if(!args) {
+            free(thread_ids);
+            free(args);
             perror("Failed to allocate memory for thread arguments!");
             return EXIT_FAILURE;
         }
         args->accounts = accounts;
         args->numAccounts = numAccounts;
-        args->file = file; 
-        
-        int startLine;
-        if(i == 0){
-            startLine =  AccountInfoLines + 2;
-        } else {
-            startLine = i * transactionsPerWorker; // startLine for each worker thread
-        }
+        FILE *uniqueFile = fopen(argv[1], "r");
+        args->file = uniqueFile; 
 
-        args->startLine = startLine; 
-        args->numTransactions = numTransactions - AccountInfoLines; // TODO
-
-        printf("Thread %d created\n", i);
-        if(pthread_create(&thread_ids[i], NULL, (void *)processTransaction, args)) {
+        args->startLine = AccountInfoLines + (i * transactionsPerWorker) + 2; 
+        args->numTransactions = transactionsPerWorker; // TODO
+    
+        if(pthread_create(&thread_ids[i], NULL, processTransaction, (void*)args)) {
             perror("Failed to create threads!");
+            free(thread_ids);
             free(args);
+            fclose(file);
             return EXIT_FAILURE;
-        };
+        }
     }
     
-
     for (int i = 0; i < NUM_WORKERS; i++) {
         pthread_join(thread_ids[i], NULL);
     }
 
     applyRewards(accounts, numAccounts);
     printBalance(accounts, numAccounts);
+    free(thread_ids);
     free(accounts);
-    fclose(file);
     return 0;
 }
 
@@ -128,62 +124,79 @@ void *processTransaction(void *arg) {
     account *accounts = args->accounts;
     int numAccounts = args->numAccounts;
     FILE *file = args->file ; 
-    int numTransactions = args-> numTransactions;
-    int startLine = args->startLine;
-    printf("Start line: %d\n", startLine);
+    int numTransactions = args->numTransactions;
     
-    char transactionDetails[1024];
-    for(int i = 0; i < startLine; i++) {
-        fgets(transactionDetails, sizeof(transactionDetails), file);
+    char dummy[1024];
+    for (int j = 0; j < args->startLine - 1; j++) {
+        fgets(dummy, sizeof(dummy), file); //  user args->uniqueFile or unqiueFile?
     }
 
-    char *type = strtok(transactionDetails, " ");
-    if(type == NULL) return NULL;
-    
-    char *accountNumber = strtok(NULL, " ");
-    char *password = strtok(NULL, " ");
-    if(!password && !accountNumber) return NULL;
-
-    int accountIndex = findAccount(numAccounts, accounts, accountNumber);
-    if (accountIndex == -1) return NULL;
-
-    if(strcmp(accounts[accountIndex].password, password) != 0) return NULL;
-
+    char transactionDetails[1024];
     for(int i = 0; i < numTransactions; i++){
         fgets(transactionDetails, sizeof(transactionDetails), file);
-        printf("Transaction Details: %s\n", transactionDetails);
-        pthread_mutex_lock(&accounts[accountIndex].ac_lock);
+        char *saveptr; // Pointer to store the context
+        // Tokenize using strtok_r
+        char *type = strtok_r(transactionDetails, " ", &saveptr);
+        if (type == NULL) continue;
 
-        if(strcmp("T", type) == 0){
-            char *transferAccount = strtok(NULL, " ");
-            double transferAmount = atof(strtok(NULL, " "));
+        char *accountNumber = strtok_r(NULL, " ", &saveptr);
+        char *password = strtok_r(NULL, " ", &saveptr);
+        if (!password && !accountNumber) continue;
+
+        if(password == NULL || accountNumber == NULL){
+            continue;
+        }
+
+        int accountIndex = findAccount(numAccounts, accounts, accountNumber);
+
+        if (accountIndex == -1) continue;
+        if (strcmp(accounts[accountIndex].password, password) != 0) continue;
+
+        if (strcmp("T", type) == 0) {
+            // printf("Transfer Requested!\n"); 
+            char *transferAccount = strtok_r(NULL, " ", &saveptr);
+            double transferAmount = atof(strtok_r(NULL, " ", &saveptr));
             int transferIndex = findAccount(numAccounts, accounts, transferAccount);
+            
+            pthread_mutex_lock(&accounts[accountIndex].ac_lock);
             accounts[accountIndex].balance -= transferAmount;
-            accounts[transferIndex].balance += transferAmount;
             accounts[accountIndex].transaction_tracter += transferAmount;
-        } else if(strcmp("C", type) == 0) {
-            return NULL;
-        } else if(strcmp("D", type) == 0){
-            double depositAmount = atof(strtok(NULL, " "));
+            pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
+            
+            pthread_mutex_lock(&accounts[transferIndex].ac_lock);
+            accounts[transferIndex].balance += transferAmount;
+            pthread_mutex_unlock(&accounts[transferIndex].ac_lock);
+
+        } else if (strcmp("C", type) == 0) {
+            // printf("Account Balance : %f\n", accounts[accountIndex].balance);
+            continue;
+        } else if (strcmp("D", type) == 0) {
+            pthread_mutex_lock(&accounts[accountIndex].ac_lock);
+            double depositAmount = atof(strtok_r(NULL, " ", &saveptr));
             accounts[accountIndex].balance += depositAmount;
             accounts[accountIndex].transaction_tracter += depositAmount;
-        
-        } else if(strcmp("W", type) == 0) {
-            double withdrawlAmount = atof(strtok(NULL, " "));
+            pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
+        } else if (strcmp("W", type) == 0) {
+            pthread_mutex_lock(&accounts[accountIndex].ac_lock);
+            double withdrawlAmount = atof(strtok_r(NULL, " ", &saveptr));
             accounts[accountIndex].balance -= withdrawlAmount;
             accounts[accountIndex].transaction_tracter += withdrawlAmount;
+            pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
         }
-        pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
     }
     free(args);
-    return NULL;
+    fclose(file);
+    pthread_exit(NULL);
+
 }
 
 void applyRewards(account *accounts, int numAccounts){
     for(int i = 0; i < numAccounts; i++){
+        pthread_mutex_lock(&accounts[i].ac_lock);
         double totalReward = accounts[i].transaction_tracter * accounts[i].reward_rate;
         accounts[i].balance += totalReward;
-        printf("Account %s: balance after reward: %.2f\n", accounts[i].account_number, accounts[i].balance);
+        pthread_mutex_unlock(&accounts[i].ac_lock);
+        // printf("Account %s:  balance after reward: %.2f\n", accounts[i].account_number, accounts[i].balance);
     }
     return;
 }
@@ -196,9 +209,11 @@ void printBalance(account *accounts, int numAccounts){
     }
 
     for(int i = 0; i < numAccounts; i++){
-        fprintf(output, "%d balance: %0.2f\n", i, accounts[i].balance);
+        fprintf(output, "%d balance:\t%0.2f\n\n", i, accounts[i].balance);
     }
     fclose(output);
     return;
 }
+
+
 
