@@ -1,15 +1,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/wait.h>
 #include "account.h"
 #include "transaction.h"
 
 #define NUM_WORKERS 10
 pthread_t *thread_ids;
 
+int pipe_fd[2];	 // The pipe
+pthread_mutex_t pipe_lock;	
+int checkBalance500 = 0;
+
 void accountInit(int numAccounts, account *accounts, FILE *file);
 int getNumTransaction(char *filename);
 void *processTransaction(void *arg);
+void *auditorProcess(void *arg);
 void applyRewards(account *accounts, int numAccounts);
 void printBalance(account *accounts, int numAccounts);
 
@@ -25,6 +33,26 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+    pthread_mutex_init(&pipe_lock, NULL);	 // Initialize the pipe
+    if (pipe(pipe_fd) == -1) {			// init the pipe!
+        perror("pipe failed");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t auditor_pid = fork();
+    if (auditor_pid == -1) {
+        perror("Error creating Auditor process");
+        return EXIT_FAILURE;
+    }
+
+    if (auditor_pid == 0) {  // Auditor child process
+        close(pipe_fd[1]);  // Close write end of the pipe in the child
+        auditorProcess(NULL);  // Process the pipe in the Auditor
+        exit(0);
+    }
+
+    close(pipe_fd[0]);
+
     int numAccounts;
     fscanf(file, "%d", &numAccounts);
     account *accounts = malloc(numAccounts * sizeof(account));
@@ -38,7 +66,7 @@ int main(int argc, char *argv[]){
     AccountInfoLines = (numAccounts * 5);
     int numTransactions = getNumTransaction(argv[1]) - AccountInfoLines - 1;
     int transactionsPerWorker = numTransactions / NUM_WORKERS;
-    int extraTransactions = numTransactions % NUM_WORKERS;
+    // int extraTransactions = numTransactions % NUM_WORKERS;
     thread_ids = (pthread_t *)malloc(sizeof(pthread_t) * NUM_WORKERS); // Number of worker threads to work concurrently
     
     accountInit(numAccounts, accounts, file);
@@ -73,7 +101,11 @@ int main(int argc, char *argv[]){
         pthread_join(thread_ids[i], NULL);
     }
 
+
     applyRewards(accounts, numAccounts);
+    close(pipe_fd[1]);
+    waitpid(auditor_pid, NULL, 0);
+
     printBalance(accounts, numAccounts);
     free(thread_ids);
     free(accounts);
@@ -169,7 +201,18 @@ void *processTransaction(void *arg) {
 
         } else if (strcmp("C", type) == 0) {
             // printf("Account Balance : %f\n", accounts[accountIndex].balance);
-            continue;
+            pthread_mutex_lock(&pipe_lock);
+            checkBalance500++;	
+            if (checkBalance500 % 500 == 0) {
+                // Write to the pipe
+                time_t now = time(NULL);
+                struct tm *tm_info = localtime(&now);
+                char message[256];
+                snprintf(message, sizeof(message), "Account %s balance: $%.2f. Check occurred at %s", accountNumber, accounts[accountIndex].balance, asctime(tm_info));
+                // printf("Account %s balance: $%.2f at %s", accountNumber, accounts[accountIndex].balance, asctime(tm_info));                
+                write(pipe_fd[1], message, strlen(message));
+            }
+            pthread_mutex_unlock(&pipe_lock);
         } else if (strcmp("D", type) == 0) {
             pthread_mutex_lock(&accounts[accountIndex].ac_lock);
             double depositAmount = atof(strtok_r(NULL, " ", &saveptr));
@@ -191,12 +234,22 @@ void *processTransaction(void *arg) {
 }
 
 void applyRewards(account *accounts, int numAccounts){
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
     for(int i = 0; i < numAccounts; i++){
         pthread_mutex_lock(&accounts[i].ac_lock);
         double totalReward = accounts[i].transaction_tracter * accounts[i].reward_rate;
         accounts[i].balance += totalReward;
         pthread_mutex_unlock(&accounts[i].ac_lock);
         // printf("Account %s:  balance after reward: %.2f\n", accounts[i].account_number, accounts[i].balance);
+        
+        char message[256];
+        snprintf(message, sizeof(message), "Account %d balance after rewards: $%.2f. Time of Update %s", i, accounts[i].balance, asctime(tm_info));
+
+        // Write to the pipe (auditor will read this)
+        pthread_mutex_lock(&pipe_lock);
+        write(pipe_fd[1], message, strlen(message));  // Send reward balance info to the auditor process
+        pthread_mutex_unlock(&pipe_lock);
     }
     return;
 }
@@ -210,10 +263,28 @@ void printBalance(account *accounts, int numAccounts){
 
     for(int i = 0; i < numAccounts; i++){
         fprintf(output, "%d balance:\t%0.2f\n\n", i, accounts[i].balance);
+        char message[256];
     }
     fclose(output);
     return;
 }
 
+void *auditorProcess(void *arg) {
+    char buffer[256];
+    ssize_t bytes_read;
+    FILE *ledger = fopen("ledger.txt", "w");
+    
+    if (ledger == NULL) {
+        perror("Error opening ledger.txt");
+        return NULL;
+    }
 
+    // Read from the pipe and write to ledger.txt
+    while ((bytes_read = read(pipe_fd[0], buffer, sizeof(buffer))) > 0) {
+        buffer[bytes_read] = '\0'; 
+        fwrite(buffer, 1, bytes_read, ledger);
+    }
 
+    fclose(ledger);
+    return NULL;
+}
