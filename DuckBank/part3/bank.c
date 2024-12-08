@@ -10,17 +10,20 @@
 
 #define NUM_WORKERS 10
 pthread_t *thread_ids; // "worker lock"
-pthread_cond_t bank_cond;
+pthread_cond_t bank_cond; // signal workers to resume
+pthread_cond_t worker_cond; //signal banker to start
 pthread_t bankThread; 
+pthread_mutex_t workerLock;
 
 int pipe_fd[2];	 // The pipe
 pthread_mutex_t pipe_lock;	
-pthread_mutex_t workerLock;
 
 pthread_barrier_t startBarrier;
 int checkBalance500 = 0;
 int balanceCount = 0;
-int stopSignal = 0;
+int bankSignaled = 0;
+int threadsWaiting = 0;
+int exitFlag = 0;
 
 void accountInit(int numAccounts, account *accounts, FILE *file);
 int getNumTransaction(char *filename);
@@ -29,7 +32,9 @@ void *auditorProcess(void *arg);
 void applyRewards(account *accounts, int numAccounts);
 void printBalance(account *accounts, int numAccounts);
 void *banker(void *arg);
+void processWorkerThreads(char *type);
 void writeLog(account *accounts, int numAccounts);
+void shutdownThreads();
 
 
 int main(int argc, char *argv[]){
@@ -100,6 +105,7 @@ int main(int argc, char *argv[]){
 
     pthread_mutex_init(&workerLock, NULL);
     pthread_cond_init(&bank_cond, NULL);
+    pthread_cond_init(&worker_cond, NULL);
     pthread_barrier_init(&startBarrier, NULL, NUM_WORKERS + 1);
     BankerArgs *bankerArgs = malloc(sizeof(BankerArgs));
     bankerArgs->accounts = accounts; 
@@ -140,11 +146,11 @@ int main(int argc, char *argv[]){
         }
     }
 
+
     pthread_barrier_wait(&startBarrier);
     for (int i = 0; i < NUM_WORKERS; i++) {
         pthread_join(thread_ids[i], NULL);
     }
-    stopSignal = -1;
     pthread_join(bankThread, NULL);
 
     close(pipe_fd[1]);
@@ -226,6 +232,8 @@ void *processTransaction(void *arg) {
         char *type = strtok_r(transactionDetails, " ", &saveptr);
         if (type == NULL) continue;
 
+        processWorkerThreads(type);
+
         char *accountNumber = strtok_r(NULL, " ", &saveptr);
         char *password = strtok_r(NULL, " ", &saveptr);
         if (!password && !accountNumber) continue;
@@ -280,24 +288,6 @@ void *processTransaction(void *arg) {
             accounts[accountIndex].balance -= withdrawlAmount;
             accounts[accountIndex].transaction_tracter += withdrawlAmount;
             pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
-        }
-
-        if(strcmp("T", type) == 0 || strcmp("W", type) == 0 || strcmp("D", type) == 0) {
-            pthread_mutex_lock(&workerLock);
-            balanceCount++;
-            pthread_mutex_unlock(&workerLock);
-        }
-        if(stopSignal == -1){
-            pthread_mutex_unlock(&workerLock);
-            break;
-        }
-        if(balanceCount % 5000 == 0){
-            // printf("Balance Count reached 5000, contact banker!\n");
-            pthread_mutex_lock(&workerLock);
-            pthread_cond_signal(&bank_cond);
-            pthread_cond_wait(&bank_cond, &workerLock);
-            // printf("Signal Received... Working on the next transaction\n");
-            pthread_mutex_unlock(&workerLock);
         }
     }
     fclose(file);
@@ -362,6 +352,45 @@ void *auditorProcess(void *arg) {
     return NULL;
 }
 
+void applyRewardsTest() {
+    printf("Banker is applying rewards...\n");
+    // Simulate processing
+    sleep(1);
+    printf("Banker finished applying rewards.\n");
+}
+
+
+void shutdownThreads() {
+    pthread_mutex_lock(&workerLock); // Lock the mutex to safely update shared resources
+    exitFlag = 1;                    // Set the flag to signal threads to exit
+    pthread_cond_broadcast(&bank_cond); // Wake up all worker threads waiting on `bank_cond`
+    pthread_cond_signal(&worker_cond);  // Wake up the banker thread if it's waiting on `worker_cond`
+    pthread_mutex_unlock(&workerLock); // Unlock the mutex
+}
+
+void processWorkerThreads(char *type){
+    while(1){
+        pthread_mutex_lock(&workerLock);
+         if (exitFlag) { 
+            pthread_mutex_unlock(&workerLock);
+            break; 
+        }
+        if(strcmp("T", type) == 0 || strcmp("W", type) == 0 || strcmp("D", type) == 0) {
+            balanceCount++;
+        }
+        if(balanceCount % 5000 == 0){
+            threadsWaiting++;
+            printf("Threads Waiting : %d\n", threadsWaiting);
+            if(threadsWaiting == NUM_WORKERS){
+                pthread_cond_signal(&worker_cond);
+            }
+            while(threadsWaiting < NUM_WORKERS ) {
+                pthread_cond_wait(&bank_cond, &workerLock);
+            }
+        } 
+        pthread_mutex_unlock(&workerLock);
+    }
+}
 
 void *banker(void *arg){
     BankerArgs *bankerArgs = (BankerArgs *)arg;
@@ -371,29 +400,30 @@ void *banker(void *arg){
     printf("Banker Thread %lu reached the barrier\n", pthread_self());
     pthread_barrier_wait(&startBarrier);
     printf("Banker Thread %lu passed the barrier\n", pthread_self());
+    
+    printf("Banker got contacted!\n");
+    printf("balanceCount : %d\n", balanceCount);
     while(1){
-        printf("Banker got contacted!\n");
         pthread_mutex_lock(&workerLock);
-        printf("balanceCount : %d\n", balanceCount);
-
-        if (stopSignal == -1) {
+        if (exitFlag) {
+            pthread_cond_broadcast(&bank_cond); // Wake up all workers before exiting
             pthread_mutex_unlock(&workerLock);
-            break;  // End the banker thread if the stop signal is sent
+            break; // Exit the infinite loop
         }
-        while(balanceCount % 5000 != 0){
-            pthread_cond_wait(&bank_cond, &workerLock);
-            printf("Nothing to do, waiting on signal...\n");
+        printf("Threads waiting: %d\n", threadsWaiting);
+        while(threadsWaiting < NUM_WORKERS) {
+            pthread_cond_wait(&worker_cond, &workerLock);
         }
-
         printf("Banker thread is updating balances...\n");
-
-        applyRewards(accounts, numAccounts);
+        // applyRewards(accounts, numAccounts);
+        applyRewardsTest();
         writeLog(accounts, numAccounts);
-
         pthread_cond_broadcast(&bank_cond); // signalling all worker threads
         printf("Banker has updated the balance and notified workers.\n");
+        threadsWaiting = 0;
         pthread_mutex_unlock(&workerLock);
     }
+
 
 }
 
