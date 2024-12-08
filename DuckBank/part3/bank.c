@@ -9,6 +9,7 @@
 #include "banker.h"
 
 #define NUM_WORKERS 10
+#define THRESHOLD 5000
 pthread_t *thread_ids; // "worker lock"
 pthread_cond_t bank_cond; // signal workers to resume
 pthread_cond_t worker_cond; //signal banker to start
@@ -21,9 +22,7 @@ pthread_mutex_t pipe_lock;
 pthread_barrier_t startBarrier;
 int checkBalance500 = 0;
 int balanceCount = 0;
-int bankSignaled = 0;
 int threadsWaiting = 0;
-int exitFlag = 0;
 
 void accountInit(int numAccounts, account *accounts, FILE *file);
 int getNumTransaction(char *filename);
@@ -34,8 +33,6 @@ void printBalance(account *accounts, int numAccounts);
 void *banker(void *arg);
 void processWorkerThreads(char *type);
 void writeLog(account *accounts, int numAccounts);
-void shutdownThreads();
-
 
 int main(int argc, char *argv[]){
     if(argc != 2){
@@ -293,7 +290,6 @@ void *processTransaction(void *arg) {
     fclose(file);
     free(args);
     pthread_exit(NULL);
-
 }
 
 void applyRewards(account *accounts, int numAccounts){
@@ -352,44 +348,28 @@ void *auditorProcess(void *arg) {
     return NULL;
 }
 
-void applyRewardsTest() {
-    printf("Banker is applying rewards...\n");
-    // Simulate processing
-    sleep(1);
-    printf("Banker finished applying rewards.\n");
-}
-
-
-void shutdownThreads() {
-    pthread_mutex_lock(&workerLock); // Lock the mutex to safely update shared resources
-    exitFlag = 1;                    // Set the flag to signal threads to exit
-    pthread_cond_broadcast(&bank_cond); // Wake up all worker threads waiting on `bank_cond`
-    pthread_cond_signal(&worker_cond);  // Wake up the banker thread if it's waiting on `worker_cond`
-    pthread_mutex_unlock(&workerLock); // Unlock the mutex
-}
-
 void processWorkerThreads(char *type){
-    while(1){
         pthread_mutex_lock(&workerLock);
-         if (exitFlag) { 
-            pthread_mutex_unlock(&workerLock);
-            break; 
-        }
+
         if(strcmp("T", type) == 0 || strcmp("W", type) == 0 || strcmp("D", type) == 0) {
             balanceCount++;
         }
-        if(balanceCount % 5000 == 0){
-            threadsWaiting++;
-            printf("Threads Waiting : %d\n", threadsWaiting);
+
+        if(balanceCount % THRESHOLD == 0){
+            threadsWaiting++; // This is def not right ;-;
+            // printf("Balance Count : %d\n", balanceCount);
+            // printf("Threads Waiting : %d\n", threadsWaiting);
             if(threadsWaiting == NUM_WORKERS){
+                // printf("I was here~\n");
                 pthread_cond_signal(&worker_cond);
-            }
-            while(threadsWaiting < NUM_WORKERS ) {
-                pthread_cond_wait(&bank_cond, &workerLock);
+            } else {
+                while (threadsWaiting < NUM_WORKERS) {
+                    pthread_cond_wait(&worker_cond, &workerLock);
+                }
+                threadsWaiting--;
             }
         } 
         pthread_mutex_unlock(&workerLock);
-    }
 }
 
 void *banker(void *arg){
@@ -401,30 +381,19 @@ void *banker(void *arg){
     pthread_barrier_wait(&startBarrier);
     printf("Banker Thread %lu passed the barrier\n", pthread_self());
     
+
+    pthread_mutex_lock(&workerLock);
     printf("Banker got contacted!\n");
     printf("balanceCount : %d\n", balanceCount);
-    while(1){
-        pthread_mutex_lock(&workerLock);
-        if (exitFlag) {
-            pthread_cond_broadcast(&bank_cond); // Wake up all workers before exiting
-            pthread_mutex_unlock(&workerLock);
-            break; // Exit the infinite loop
-        }
-        printf("Threads waiting: %d\n", threadsWaiting);
-        while(threadsWaiting < NUM_WORKERS) {
-            pthread_cond_wait(&worker_cond, &workerLock);
-        }
-        printf("Banker thread is updating balances...\n");
-        // applyRewards(accounts, numAccounts);
-        applyRewardsTest();
-        writeLog(accounts, numAccounts);
-        pthread_cond_broadcast(&bank_cond); // signalling all worker threads
-        printf("Banker has updated the balance and notified workers.\n");
-        threadsWaiting = 0;
-        pthread_mutex_unlock(&workerLock);
-    }
 
-
+    printf("Banker thread is updating balances...\n");
+    applyRewards(accounts, numAccounts);
+    printBalance(accounts, numAccounts);
+    writeLog(accounts, numAccounts);
+    pthread_cond_broadcast(&worker_cond); // signalling all worker threads
+    pthread_mutex_unlock(&workerLock);
+    printf("Banker has updated the balance and notified workers.\n");
+	pthread_exit(NULL);
 }
 
 void writeLog(account *accounts, int numAccounts) {

@@ -26,21 +26,12 @@ it tries to take the lock if avaible halts otherwise.
 So it waits for two seperate things until it resumes exection.
 */
 
-// Comment this out for the single thread example 
-#define MULTI
 
-#ifdef MULTI
-    #define NUM_WORKERS 5
 
-#else
-    #define NUM_WORKERS 1
+#define NUM_WORKERS 5
 
-#endif
-
-void *worker_func_1_thread_example(void *arg);
 void *worker_func_multi_thread_example(void *arg);
 
-void *banker_func_1_thread_example(void *arg);
 void *banker_func_multi_thread_example(void *arg);
 
 pthread_mutex_t worker_done_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -52,71 +43,6 @@ pthread_barrier_t barrier;// barrier sycnro object
 
 int workers_done = 0;
 
-#ifndef MULTI
-
-int main(int argc, char *argv[])
-{
-    pthread_t bank_thread, worker_thread;
-    pthread_t worker_threads[NUM_WORKERS];
-
-    int ret = pthread_barrier_init(&barrier, NULL, 2);
-
-    void* (*banker_func)(void*) = &banker_func_1_thread_example;
-    void* (*worker_func)(void*) = &worker_func_1_thread_example;
-
-    pthread_create(&bank_thread, NULL, banker_func, NULL);
-
-    for(int i = 0; i < NUM_WORKERS; i++){
-        pthread_create(&worker_threads[i], NULL, worker_func, NULL);
-    }
-
-    // like waitpid we are waiting for our threads to be done
-    // NOTE: If master thread exits before child threads are done
-    // the whole process is terminated
-    pthread_join(bank_thread, NULL);
-
-    for(int i = 0; i < NUM_WORKERS; i++){
-        pthread_join(worker_threads[i], NULL);
-    }
-}
-
-void *worker_func_1_thread_example(void *arg){
-    // take bank lock
-    pthread_mutex_lock(&bank_lock);
-
-    pthread_barrier_wait(&barrier);
-
-    // put all the stuff for worker threads to do
-    printf("DOING MY WORK HERE\n");
-
-    // halt execution until signaled and lock is free
-    pthread_cond_wait(&bank_cond, &bank_lock);
-
-    printf("More worker stuff\n");
-
-    // wake up bank by signaling and releasing lock
-    pthread_mutex_unlock(&bank_lock);
-    pthread_cond_signal(&bank_cond);
-}
-
-void *banker_func_1_thread_example(void *arg){
-    // wait for two threads to hit this
-    pthread_barrier_wait(&barrier);
-
-    // halt execution until lock is free
-    pthread_mutex_lock(&bank_lock);
-
-    // put all the stuff for bank thread to do
-    printf("Bank work\n");
-
-    // wake worker up
-    pthread_cond_broadcast(&bank_cond);
-
-    // Release lock so the worker can wake up
-    pthread_cond_wait(&bank_cond, &bank_lock);
-}
-
-#else
 
 int main(int argc, char *argv[])
 {

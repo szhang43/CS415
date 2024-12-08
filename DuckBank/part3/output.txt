@@ -10,7 +10,7 @@
 
 5 balance:	3034486.40
 
-6 balance:	314218.73
+6 balance:	314013.61
 
 7 balance:	2243715.94
 

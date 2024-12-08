@@ -1,0 +1,10 @@
+Account 0 balance (Puddles Bank):	807457.51
+Account 1 balance (Puddles Bank):	112606.87
+Account 2 balance (Puddles Bank):	846050.63
+Account 3 balance (Puddles Bank):	931796.23
+Account 4 balance (Puddles Bank):	209220.55
+Account 5 balance (Puddles Bank):	606897.28
+Account 6 balance (Puddles Bank):	62802.72
+Account 7 balance (Puddles Bank):	448743.19
+Account 8 balance (Puddles Bank):	658528.80
+Account 9 balance (Puddles Bank):	308073.24

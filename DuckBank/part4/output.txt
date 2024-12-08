@@ -1,0 +1,10 @@
+Account 0 balance (Duck Bank):	4037287.54
+Account 1 balance (Duck Bank):	563034.37
+Account 2 balance (Duck Bank):	4230253.14
+Account 3 balance (Duck Bank):	4658981.14
+Account 4 balance (Duck Bank):	1046102.76
+Account 5 balance (Duck Bank):	3034486.40
+Account 6 balance (Duck Bank):	314013.61
+Account 7 balance (Duck Bank):	2243715.94
+Account 8 balance (Duck Bank):	3292644.01
+Account 9 balance (Duck Bank):	1540366.19
