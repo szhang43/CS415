@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
         printf("Wrong number of arguments!\n"); // TODO
         return EXIT_FAILURE;
     }
+
     FILE *file = fopen(argv[1], "r");
     if(file == NULL){
         printf("Error Opening File : %s\n", argv[1]);
@@ -36,31 +37,43 @@ int main(int argc, char *argv[]){
     pthread_mutex_init(&pipe_lock, NULL);	 // Initialize the pipe
     if (pipe(pipe_fd) == -1) {			// init the pipe!
         perror("pipe failed");
+        fclose(file);
         exit(EXIT_FAILURE);
     }
 
     pid_t auditor_pid = fork();
     if (auditor_pid == -1) {
         perror("Error creating Auditor process");
+        fclose(file);
         return EXIT_FAILURE;
     }
 
     if (auditor_pid == 0) {  // Auditor child process
         close(pipe_fd[1]);  // Close write end of the pipe in the child
         auditorProcess(NULL);  // Process the pipe in the Auditor
+        fclose(file);
         exit(0);
     }
 
     close(pipe_fd[0]);
 
     int numAccounts;
-    fscanf(file, "%d", &numAccounts);
+    if (fscanf(file, "%d", &numAccounts) != 1) {
+        printf("Error reading number of accounts\n");
+        fclose(file);  // Close file before exiting
+        return EXIT_FAILURE;
+    }
+
     account *accounts = malloc(numAccounts * sizeof(account));
     if(!accounts) {
         perror("Memory Allocation Failed");
+        free(accounts);
         fclose(file);
         return EXIT_FAILURE;
     }
+
+    accountInit(numAccounts, accounts, file);
+    fclose(file);
 
     int AccountInfoLines;
     AccountInfoLines = (numAccounts * 5);
@@ -68,14 +81,19 @@ int main(int argc, char *argv[]){
     int transactionsPerWorker = numTransactions / NUM_WORKERS;
     // int extraTransactions = numTransactions % NUM_WORKERS;
     thread_ids = (pthread_t *)malloc(sizeof(pthread_t) * NUM_WORKERS); // Number of worker threads to work concurrently
-    
-    accountInit(numAccounts, accounts, file);
-    fclose(file);
+    if (!thread_ids) {
+        perror("Memory allocation failed for thread IDs");
+        free(thread_ids);
+        free(accounts);
+        return EXIT_FAILURE;
+    }
+
     
     for (int i = 0; i < NUM_WORKERS; i++) {
         TransactionArgs *args = malloc(sizeof(TransactionArgs));
         if(!args) {
             free(thread_ids);
+            free(accounts);
             free(args);
             perror("Failed to allocate memory for thread arguments!");
             return EXIT_FAILURE;
@@ -83,6 +101,13 @@ int main(int argc, char *argv[]){
         args->accounts = accounts;
         args->numAccounts = numAccounts;
         FILE *uniqueFile = fopen(argv[1], "r");
+        if(uniqueFile == NULL) {
+            free(thread_ids);
+            fclose(uniqueFile);
+            free(args);
+            free(accounts);
+            return EXIT_FAILURE;
+        }
         args->file = uniqueFile; 
 
         args->startLine = AccountInfoLines + (i * transactionsPerWorker) + 2; 
@@ -91,8 +116,9 @@ int main(int argc, char *argv[]){
         if(pthread_create(&thread_ids[i], NULL, processTransaction, (void*)args)) {
             perror("Failed to create threads!");
             free(thread_ids);
+            fclose(args->file);
             free(args);
-            fclose(file);
+            free(accounts);
             return EXIT_FAILURE;
         }
     }
@@ -105,6 +131,11 @@ int main(int argc, char *argv[]){
     applyRewards(accounts, numAccounts);
     close(pipe_fd[1]);
     waitpid(auditor_pid, NULL, 0);
+
+    for (int i = 0; i < numAccounts; i++) {
+        pthread_mutex_destroy(&accounts[i].ac_lock);
+    }
+    pthread_mutex_destroy(&pipe_lock);
 
     printBalance(accounts, numAccounts);
     free(thread_ids);
@@ -137,7 +168,7 @@ int getNumTransaction(char *filename){
     while (fgets(line, sizeof(line), file)) {
         numTransactions++;
     }
-
+    fclose(file);
     return numTransactions;
 }
 
@@ -227,8 +258,8 @@ void *processTransaction(void *arg) {
             pthread_mutex_unlock(&accounts[accountIndex].ac_lock);
         }
     }
-    free(args);
     fclose(file);
+    free(args);
     pthread_exit(NULL);
 
 }
