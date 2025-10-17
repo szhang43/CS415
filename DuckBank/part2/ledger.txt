@@ -1,30 +1,30 @@
-Account 7966380955913694 balance: $2964174.10. Check occurred at Sat Dec  7 23:54:20 2024
-Account 8255171551994747 balance: $3175996.53. Check occurred at Sat Dec  7 23:54:20 2024
-Account 6847226299857821 balance: $676003.30. Check occurred at Sat Dec  7 23:54:20 2024
-Account 8255171551994747 balance: $3093193.80. Check occurred at Sat Dec  7 23:54:20 2024
-Account 1093278990669429 balance: $1284092.85. Check occurred at Sat Dec  7 23:54:20 2024
-Account 9980216556183046 balance: $2380122.27. Check occurred at Sat Dec  7 23:54:20 2024
-Account 8255171551994747 balance: $3025450.81. Check occurred at Sat Dec  7 23:54:20 2024
-Account 8028716243309826 balance: $1727433.55. Check occurred at Sat Dec  7 23:54:20 2024
-Account 7966380955913694 balance: $2538323.79. Check occurred at Sat Dec  7 23:54:20 2024
-Account 0793710490620664 balance: $4235003.96. Check occurred at Sat Dec  7 23:54:20 2024
-Account 3491588839892013 balance: $3381113.06. Check occurred at Sat Dec  7 23:54:20 2024
-Account 6847226299857821 balance: $1350936.61. Check occurred at Sat Dec  7 23:54:20 2024
-Account 2076962079974167 balance: $3511166.67. Check occurred at Sat Dec  7 23:54:20 2024
-Account 4659001911688512 balance: $1446162.84. Check occurred at Sat Dec  7 23:54:20 2024
-Account 4659001911688512 balance: $1501624.90. Check occurred at Sat Dec  7 23:54:20 2024
-Account 9980216556183046 balance: $2231385.20. Check occurred at Sat Dec  7 23:54:20 2024
-Account 8255171551994747 balance: $2796558.38. Check occurred at Sat Dec  7 23:54:20 2024
-Account 3491588839892013 balance: $3080246.51. Check occurred at Sat Dec  7 23:54:20 2024
-Account 0793710490620664 balance: $3873062.69. Check occurred at Sat Dec  7 23:54:20 2024
-Account 6847226299857821 balance: $2110107.53. Check occurred at Sat Dec  7 23:54:20 2024
-Account 0 balance after rewards: $3111685.13. Time of Update Sat Dec  7 23:54:20 2024
-Account 1 balance after rewards: $2016708.08. Time of Update Sat Dec  7 23:54:20 2024
-Account 2 balance after rewards: $3248744.20. Time of Update Sat Dec  7 23:54:20 2024
-Account 3 balance after rewards: $3889910.50. Time of Update Sat Dec  7 23:54:20 2024
-Account 4 balance after rewards: $2164242.04. Time of Update Sat Dec  7 23:54:20 2024
-Account 5 balance after rewards: $2119930.00. Time of Update Sat Dec  7 23:54:20 2024
-Account 6 balance after rewards: $2206168.18. Time of Update Sat Dec  7 23:54:20 2024
-Account 7 balance after rewards: $2306013.02. Time of Update Sat Dec  7 23:54:20 2024
-Account 8 balance after rewards: $2788273.79. Time of Update Sat Dec  7 23:54:20 2024
-Account 9 balance after rewards: $2011539.14. Time of Update Sat Dec  7 23:54:20 2024
+Account 1093278990669429 balance: $1096484.48. Check occurred at Wed Jan 15 14:19:23 2025
+Account 0793710490620664 balance: $4553241.26. Check occurred at Wed Jan 15 14:19:23 2025
+Account 1093278990669429 balance: $1189249.45. Check occurred at Wed Jan 15 14:19:23 2025
+Account 7966380955913694 balance: $2762847.89. Check occurred at Wed Jan 15 14:19:23 2025
+Account 7966380955913694 balance: $2721969.04. Check occurred at Wed Jan 15 14:19:23 2025
+Account 8028716243309826 balance: $1731692.52. Check occurred at Wed Jan 15 14:19:23 2025
+Account 1093278990669429 balance: $1425891.69. Check occurred at Wed Jan 15 14:19:23 2025
+Account 8028716243309826 balance: $1737661.22. Check occurred at Wed Jan 15 14:19:23 2025
+Account 8255171551994747 balance: $2949452.77. Check occurred at Wed Jan 15 14:19:23 2025
+Account 4659001911688512 balance: $1101789.33. Check occurred at Wed Jan 15 14:19:23 2025
+Account 9980216556183046 balance: $2259079.54. Check occurred at Wed Jan 15 14:19:23 2025
+Account 4659001911688512 balance: $1302421.49. Check occurred at Wed Jan 15 14:19:23 2025
+Account 6847226299857821 balance: $1458881.54. Check occurred at Wed Jan 15 14:19:23 2025
+Account 6847226299857821 balance: $1564581.31. Check occurred at Wed Jan 15 14:19:23 2025
+Account 6847226299857821 balance: $1639034.26. Check occurred at Wed Jan 15 14:19:23 2025
+Account 9980216556183046 balance: $2216615.52. Check occurred at Wed Jan 15 14:19:23 2025
+Account 8028716243309826 balance: $1922489.94. Check occurred at Wed Jan 15 14:19:23 2025
+Account 9980216556183046 balance: $2217182.72. Check occurred at Wed Jan 15 14:19:23 2025
+Account 9980216556183046 balance: $2248987.06. Check occurred at Wed Jan 15 14:19:23 2025
+Account 0793710490620664 balance: $3828835.40. Check occurred at Wed Jan 15 14:19:23 2025
+Account 0 balance after rewards: $3111685.13. Time of Update Wed Jan 15 14:19:23 2025
+Account 1 balance after rewards: $2016708.08. Time of Update Wed Jan 15 14:19:23 2025
+Account 2 balance after rewards: $3248744.20. Time of Update Wed Jan 15 14:19:23 2025
+Account 3 balance after rewards: $3889910.50. Time of Update Wed Jan 15 14:19:23 2025
+Account 4 balance after rewards: $2164242.04. Time of Update Wed Jan 15 14:19:23 2025
+Account 5 balance after rewards: $2119930.00. Time of Update Wed Jan 15 14:19:23 2025
+Account 6 balance after rewards: $2206168.18. Time of Update Wed Jan 15 14:19:23 2025
+Account 7 balance after rewards: $2306013.02. Time of Update Wed Jan 15 14:19:23 2025
+Account 8 balance after rewards: $2788273.79. Time of Update Wed Jan 15 14:19:23 2025
+Account 9 balance after rewards: $2011539.14. Time of Update Wed Jan 15 14:19:23 2025
